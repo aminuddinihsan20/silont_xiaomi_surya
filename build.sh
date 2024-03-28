@@ -11,7 +11,7 @@ DEVICE="Surya"
 KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(date +%y%m%d-%H%M)"
 TEMPZIPNAME="${KERNELNAME}-unsigned.zip"
 ZIPNAME="${KERNELNAME}.zip"
-TC_DIR="$(pwd)/tc/clang-neutron"
+TC_DIR="$(pwd)/tc/yuki-clang"
 AK3_DIR="$(pwd)/android/AnyKernel3"
 DEFCONFIG="surya_defconfig"
 
@@ -23,16 +23,11 @@ fi
 export PATH="$TC_DIR/bin:$PATH"
 
 if ! [ -d "$TC_DIR" ]; then
-	echo "Neutron Clang not found! Downloading to $TC_DIR..."
-	mkdir -p "$TC_DIR" && cd "$TC_DIR"
-	curl -LO "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman"
-	bash ./antman -S
-	bash ./antman --patch=glibc
-	cd ../..
-	if ! [ -d "$TC_DIR" ]; then
-		echo "Cloning failed! Aborting..."
-		exit 1
-	fi
+   echo "yuki clang not found! Cloning to $TC_DIR..."
+   if ! git clone --depth=1 https://bitbucket.org/thexperienceproject/yuki-clang.git "$TC_DIR"; then
+      echo "Cloning failed! Aborting..."
+      exit 1
+   fi
 fi
 
 cd "$TC_DIR" && bash ./antman -U && cd ../..
@@ -76,7 +71,7 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 	cp $kernel $dtb $dtbo AnyKernel3
 	rm -rf out/arch/arm64/boot
 	cd AnyKernel3
-	git checkout surya &> /dev/null
+	git checkout silont &> /dev/null
 	zip -r9 "../$ZIPNAME" * -x .git README.md *placeholder
 	cd ..
 	rm -rf AnyKernel3
