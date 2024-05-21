@@ -1,16 +1,36 @@
+
 #!/bin/bash
 #
 # Compile script for QuicksilveR kernel
 # Copyright (C) 2020-2021 Adithya R.
 
+cyan="\033[96m"
+green="\033[92m"
+red="\033[91m"
+blue="\033[94m"
+yellow="\033[93m"
+
+echo -e "$cyan===========================\033[0m"
+echo -e "$cyan= START COMPILING KERNEL  =\033[0m"
+echo -e "$cyan===========================\033[0m"
+
+echo -e "$yellow...LOADING...\033[0m"
+
+echo -e -ne "$green## (10%\r"
+sleep 0.7
+echo -e -ne "$green#####                     (33%)\r"
+sleep 0.7
+echo -e -ne "$green#############             (66%)\r"
+sleep 0.7
+echo -e -ne "$green#######################   (100%)\r"
+echo -ne "\n"
+
+echo -e -n "$yellow\033[104mPRESS ENTER TO CONTINUE\033[0m"
+read P
+echo  $P
+
 SECONDS=0 # builtin bash timer
-patch_config
-versioning
-KERNEL="SiLonT"
-DEVICE="Surya"
-KERNELNAME="${KERNEL}-${DEVICE}-${KERNELTYPE}-$(date +%y%m%d-%H%M)"
-TEMPZIPNAME="${KERNELNAME}-unsigned.zip"
-ZIPNAME="${KERNELNAME}.zip"
+ZIPNAME="Yhwach-Kernel-surya-$(date '+%Y%m%d-%H%M').zip"
 TC_DIR="$(pwd)/tc/yuki-clang"
 AK3_DIR="$(pwd)/android/AnyKernel3"
 DEFCONFIG="surya_defconfig"
@@ -30,7 +50,6 @@ if ! [ -d "$TC_DIR" ]; then
    fi
 fi
 
-cd "$TC_DIR" && bash ./antman -U && cd ../..
 
 if [[ $1 = "-r" || $1 = "--regen" ]]; then
 	make O=out ARCH=arm64 $DEFCONFIG savedefconfig
@@ -64,20 +83,19 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 	echo -e "\nKernel compiled succesfully! Zipping up...\n"
 	if [ -d "$AK3_DIR" ]; then
 		cp -r $AK3_DIR AnyKernel3
-	elif ! git clone -q https://github.com/aminuddinihsan20/AnyKernel3 -b surya; then
+	elif ! git clone -q https://github.com/aminuddinihsan20/AnyKernel3 -b master; then
 		echo -e "\nAnyKernel3 repo not found locally and couldn't clone from GitHub! Aborting..."
 		exit 1
 	fi
 	cp $kernel $dtb $dtbo AnyKernel3
 	rm -rf out/arch/arm64/boot
 	cd AnyKernel3
-	git checkout silont &> /dev/null
+	git checkout surya &> /dev/null
 	zip -r9 "../$ZIPNAME" * -x .git README.md *placeholder
 	cd ..
 	rm -rf AnyKernel3
 	echo -e "\nCompleted in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !"
 	echo "Zip: $ZIPNAME"
-	[ -x "$(command -v gdrive)" ] && gdrive upload --share "$ZIPNAME"
 else
 	echo -e "\nCompilation failed!"
 	exit 1
